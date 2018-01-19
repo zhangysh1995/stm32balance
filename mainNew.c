@@ -2,8 +2,9 @@
 #include "key.h"
 #include "delay.h"
 #include "usart.h"
-
+#include "lcd.h"
 #include "sys.h"
+
 #include "includes.h"
 #include "24cxx.h"
 #include "myiic.h"
@@ -140,7 +141,7 @@ void LCD_task(void *pdata) {
   LCD_ShowString(30,40,200,24,24,"Mini STM32 ^_^");
   LCD_ShowString(30,70,200,16,16,"TFTLCD TEST");
   LCD_ShowString(30,90,200,16,16,"CSE@SUSTech");
-  LCD_ShowString(30,110,200,16,16,lcd_id);      					 
+  LCD_ShowString(30,110,200,16,16,lcd_id);
   LCD_ShowString(30,130,200,12,12,"2018/1/19");
 }
 
@@ -173,7 +174,7 @@ void GPIO_Configuration(void)
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;         //管脚频率为50MHZ
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_Init(GPIOB,&GPIO_InitStructure);                                 //初始化PB512                               //初始化PB5
+  GPIO_Init(GPIOB,&GPIO_InitStructure);                                 //初始化PB12                               //初始化PB5
 }
 
 unsigned long Read_HX711(void)  //读HX711芯片输出的数据。
