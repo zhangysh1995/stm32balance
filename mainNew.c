@@ -49,9 +49,9 @@ void blt_task(void *pdata);
 
 //LCD 任务
 //设置任务优先级
-#define lcd_TASK_PRIO       			7
+#define lcd_TASK_PRIO       			6
 //设置任务堆栈大小
-#define lcd_STK_SIZE  		    		128
+#define lcd_STK_SIZE  		    		64
 //任务堆栈
 OS_STK lcd_TASK_STK[BLT_STK_SIZE];
 //任务函数
@@ -59,17 +59,20 @@ void lcd_task(void *pdata);
 
 
 int main(void) {
+  u8 lcd_id[12];
   float weigh2;
 
   // initialization
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
   delay_init();
+  uart_init(9600);
   LED_Init();
   KEY_Init();
+  //GPIO_Configuration();
   LCD_Init();
   sprintf((char*)lcd_id,"LCD ID:%04X",lcddev.id);
-  uart_init(9600);
-  GPIO_Configuration();
+
+
 
   // ucos task
   OSInit();
@@ -79,21 +82,26 @@ int main(void) {
   LED0 = 1;
   LED1 = 1;
   GPIO_ResetBits(GPIOB,GPIO_Pin_11);
-  GPIO_ResetBits(GPIOB,GPIO_Pin_11);
+  GPIO_ResetBits(GPIOB,GPIO_Pin_12);
 
   zero = 0;
+
+  
   while(1) {
     delay_ms(1000);
     printf("...Test serial output....\n");
 
-    weigh2=Read_HX711();
-    // 去皮
-    weight1 = weigh2/429.5 - zero;
-    GPIO_SetBits(GPIOA,GPIO_Pin_11);
-    printf("%d\n",weight1);
+//    weigh2=Read_HX711();
+//    // 去皮
+//    weight1 = weigh2/429.5 - zero;
+//    GPIO_SetBits(GPIOA,GPIO_Pin_11);
+//    printf("%d\n",weight1);
 
-    // read weight once
-    LED0 = !LED0;
+//    // read weight once
+//    LED0 = !LED0;
+    
+      //POINT_COLOR=RED;
+  //LCD_ShowString(30,40,200,24,24,"Mini STM32 ^_^");
   }
 }
 
@@ -135,14 +143,18 @@ void blt_task(void *pdata) {
 }
 
 // TFLCD 进程
-void LCD_task(void *pdata) {
+void lcd_task(void *pdata) {
 //change your shown string here
-  POINT_COLOR=RED;
-  LCD_ShowString(30,40,200,24,24,"Mini STM32 ^_^");
-  LCD_ShowString(30,70,200,16,16,"TFTLCD TEST");
-  LCD_ShowString(30,90,200,16,16,"CSE@SUSTech");
-  LCD_ShowString(30,110,200,16,16,lcd_id);
-  LCD_ShowString(30,130,200,12,12,"2018/1/19");
+  while(1) {
+    //printf("lcd task");
+    delay_ms(1000);
+    POINT_COLOR=RED;
+    LCD_ShowString(30,40,200,24,24,"Mini STM32 ^_^");
+    LCD_ShowString(30,70,200,16,16,"TFTLCD TEST");
+    LCD_ShowString(30,90,200,16,16,"CSE@SUSTech");
+    //LCD_ShowString(30,110,200,16,16,lcd_id);
+    LCD_ShowString(30,130,200,12,12,"2018/1/19");
+  }
 }
 
 void start_task(void *pdata)
@@ -150,7 +162,7 @@ void start_task(void *pdata)
   OS_CPU_SR cpu_sr=0;
 	pdata = pdata;
   OS_ENTER_CRITICAL();
- 	OSTaskCreate(key_task,(void *)0,(OS_STK*)&KEY_TASK_STK[KEY_STK_SIZE-1],KEY_TASK_PRIO);
+  OSTaskCreate(key_task,(void *)0,(OS_STK*)&KEY_TASK_STK[KEY_STK_SIZE-1],KEY_TASK_PRIO);
  	// OSTaskCreate(blt_task,(void *)0,(OS_STK*)&blt_TASK_STK[blt_STK_SIZE-1],blt_TASK_PRIO);
   OSTaskCreate(lcd_task,(void *)0,(OS_STK*)&lcd_TASK_STK[lcd_STK_SIZE-1],lcd_TASK_PRIO);
 	OSTaskSuspend(START_TASK_PRIO);
