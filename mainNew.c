@@ -20,7 +20,7 @@ u32 weight1;
 // ====== ======
 //START 任务
 //设置任务优先级
-#define START_TASK_PRIO      			10 //开始任务的优先级设置为最低
+#define START_TASK_PRIO      			5 //开始任务的优先级设置为最低
 //设置任务堆栈大小
 #define START_STK_SIZE  				64
 //任务堆栈
@@ -38,15 +38,15 @@ OS_STK KEY_TASK_STK[KEY_STK_SIZE];
 //任务函数
 void key_task(void *pdata);
 
-//Bluetooth 任务
+// Weight 任务
 //设置任务优先级
-#define BLT_TASK_PRIO       			8
+#define BLC_TASK_PRIO       			5
 //设置任务堆栈大小
-#define BLT_STK_SIZE  		    		64
+#define BLC_STK_SIZE  		    		64
 //任务堆栈
-OS_STK BLT_TASK_STK[BLT_STK_SIZE];
+OS_STK BLC_TASK_STK[BLC_STK_SIZE];
 //任务函数
-void blt_task(void *pdata);
+void BLC_task(void *pdata);
 
 //LCD 任务
 //设置任务优先级
@@ -54,14 +54,13 @@ void blt_task(void *pdata);
 //设置任务堆栈大小
 #define lcd_STK_SIZE  		    		64
 //任务堆栈
-OS_STK lcd_TASK_STK[BLT_STK_SIZE];
+OS_STK lcd_TASK_STK[BLC_STK_SIZE];
 //任务函数
 void lcd_task(void *pdata);
 
 
 int main(void) {
   u8 lcd_id[12];
-  float weigh2;
 
   // initialization
   NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
@@ -70,42 +69,17 @@ int main(void) {
   LED_Init();
   KEY_Init();
   GPIO_Configuration();
-  GPIO_ResetBits(GPIOB,GPIO_Pin_11);
-  GPIO_ResetBits(GPIOB,GPIO_Pin_12);
-  
+
   LCD_Init();
   sprintf((char*)lcd_id,"LCD ID:%04X",lcddev.id);
-
 
   // ucos task
   OSInit();
   OSTaskCreate(start_task,(void *)0,(OS_STK *)&START_TASK_STK[START_STK_SIZE-1],START_TASK_PRIO );
   OSStart();
 
-
-  //
   LED0 = 1;
   LED1 = 1;
-
-
-  zero = 0;
-  while(1) {
-    delay_ms(1000);
-    printf("...Start main logic...\n");
-
-    testGPIO();
-//    weigh2=Read_HX711();
-//    // 去皮
-//    weight1 = weigh2/429.5 - zero;
-//    GPIO_SetBits(GPIOA,GPIO_Pin_11);
-//    printf("%d\n",weight1);
-
-//    // read weight once
-//    LED0 = !LED0;
-
-      /** for tests **/
-      //POINT_COLOR=RED;
-      //LCD_ShowString(30,40,200,24,24,"Mini STM32 ^_^");
   }
 }
 
@@ -129,20 +103,25 @@ void key_task(void *pdata) {
         LED1 = 1;
         printf("key1 pressed...zero is %u", zero);
         break;
-      // others
-      // case WKUP_PRES:
-      //   LED0=!LED0;
-      //   LED1=!LED1;
-      //   break;
       default:
         delay_ms(50);
     }
   }
 }
 
-// 蓝牙
-void blt_task(void *pdata) {
+// 称重
+void BLC_task(void *pdata) {
+  float weigh2;
+  zero = 0;
+  while(1) {
+    delay_ms(1000);
+    printf("...Start main logic...\n");
 
+    weigh2 = Read_HX711();
+    weight1 = weigh2/429.5 - zero;
+    printf("%d\n",weight1);
+
+    LED0 = !LED0;
 
 }
 
@@ -167,8 +146,8 @@ void start_task(void *pdata)
 	pdata = pdata;
   OS_ENTER_CRITICAL();
   OSTaskCreate(key_task,(void *)0,(OS_STK*)&KEY_TASK_STK[KEY_STK_SIZE-1],KEY_TASK_PRIO);
- 	// OSTaskCreate(blt_task,(void *)0,(OS_STK*)&blt_TASK_STK[blt_STK_SIZE-1],blt_TASK_PRIO);
-  OSTaskCreate(lcd_task,(void *)0,(OS_STK*)&lcd_TASK_STK[lcd_STK_SIZE-1],lcd_TASK_PRIO);
+ 	OSTaskCreate(BLC_task,(void *)0,(OS_STK*)&BLC_TASK_STK[BLC_STK_SIZE-1],BLC_TASK_PRIO);
+  // OSTaskCreate(lcd_task,(void *)0,(OS_STK*)&lcd_TASK_STK[lcd_STK_SIZE-1],lcd_TASK_PRIO);
 	OSTaskSuspend(START_TASK_PRIO);
 	OS_EXIT_CRITICAL();
 }
