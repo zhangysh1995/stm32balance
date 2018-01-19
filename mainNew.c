@@ -11,6 +11,7 @@
 
 void GPIO_Configuration(void);
 unsigned long Read_HX711(void);
+void testGPIO(void);
 
 // ====== GLOBAL VARIABLES ======
 u32 zero;
@@ -39,7 +40,7 @@ void key_task(void *pdata);
 
 //Bluetooth 任务
 //设置任务优先级
-#define BLT_TASK_PRIO       			7
+#define BLT_TASK_PRIO       			8
 //设置任务堆栈大小
 #define BLT_STK_SIZE  		    		64
 //任务堆栈
@@ -68,10 +69,12 @@ int main(void) {
   uart_init(9600);
   LED_Init();
   KEY_Init();
-  //GPIO_Configuration();
+  GPIO_Configuration();
+  GPIO_ResetBits(GPIOB,GPIO_Pin_11);
+  GPIO_ResetBits(GPIOB,GPIO_Pin_12);
+  
   LCD_Init();
   sprintf((char*)lcd_id,"LCD ID:%04X",lcddev.id);
-
 
 
   // ucos task
@@ -79,18 +82,18 @@ int main(void) {
   OSTaskCreate(start_task,(void *)0,(OS_STK *)&START_TASK_STK[START_STK_SIZE-1],START_TASK_PRIO );
   OSStart();
 
+
+  //
   LED0 = 1;
   LED1 = 1;
-  GPIO_ResetBits(GPIOB,GPIO_Pin_11);
-  GPIO_ResetBits(GPIOB,GPIO_Pin_12);
+
 
   zero = 0;
-
-  
   while(1) {
     delay_ms(1000);
-    printf("...Test serial output....\n");
+    printf("...Start main logic...\n");
 
+    testGPIO();
 //    weigh2=Read_HX711();
 //    // 去皮
 //    weight1 = weigh2/429.5 - zero;
@@ -99,9 +102,10 @@ int main(void) {
 
 //    // read weight once
 //    LED0 = !LED0;
-    
+
+      /** for tests **/
       //POINT_COLOR=RED;
-  //LCD_ShowString(30,40,200,24,24,"Mini STM32 ^_^");
+      //LCD_ShowString(30,40,200,24,24,"Mini STM32 ^_^");
   }
 }
 
@@ -217,22 +221,28 @@ unsigned long Read_HX711(void)  //读HX711芯片输出的数据。
   return tmp;
 }
 
-//  while(1) {
-//    GPIO_SetBits(GPIOB,GPIO_Pin_11);
-//
-//    if(GPIO_ReadOutputDataBit(GPIOB,GPIO_Pin_11)) printf("b.12: on\n");
-//
-//    GPIO_ResetBits(GPIOB,GPIO_Pin_11);
-//
-//    if(!GPIO_ReadOutputDataBit(GPIOB,GPIO_Pin_11)) printf("b.12: off\n");
-//
-//    delay_ms(500);
-//    LED0 = !LED0;
-//  }
+/*
+ * test: GPIO for balance
+ */
+void testGPIO(void) {
+  // one
+   while(1) {
+     GPIO_SetBits(GPIOB,GPIO_Pin_11);
 
+     if(GPIO_ReadOutputDataBit(GPIOB,GPIO_Pin_11)) printf("b.12: on\n");
 
-//  while(1) {
-//    delay_ms(500);
-//    if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_11)) printf("b.11: on\n");
-//    else printf("b.11: off\n");
-//  }
+     GPIO_ResetBits(GPIOB,GPIO_Pin_11);
+
+     if(!GPIO_ReadOutputDataBit(GPIOB,GPIO_Pin_11)) printf("b.12: off\n");
+
+     delay_ms(500);
+     LED0 = !LED0;
+   }
+
+// two
+   while(1) {
+     delay_ms(500);
+     if(GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_11)) printf("b.11: on\n");
+     else printf("b.11: off\n");
+   }
+ }
