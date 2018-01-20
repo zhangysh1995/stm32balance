@@ -12,6 +12,7 @@
 void GPIO_Configuration(void);
 unsigned long Read_HX711(void);
 void testGPIO(void);
+//void BLC_task(void);
 
 // ====== GLOBAL VARIABLES ======
 u32 zero;
@@ -20,7 +21,7 @@ u32 weight1;
 // ====== ======
 //START 任务
 //设置任务优先级
-#define START_TASK_PRIO      			5 //开始任务的优先级设置为最低
+#define START_TASK_PRIO      		10  //开始任务的优先级设置为最低
 //设置任务堆栈大小
 #define START_STK_SIZE  				64
 //任务堆栈
@@ -68,9 +69,10 @@ int main(void) {
   uart_init(9600);
   LED_Init();
   KEY_Init();
+  LCD_Init();
   GPIO_Configuration();
 
-  LCD_Init();
+
   sprintf((char*)lcd_id,"LCD ID:%04X",lcddev.id);
 
   // ucos task
@@ -78,9 +80,12 @@ int main(void) {
   OSTaskCreate(start_task,(void *)0,(OS_STK *)&START_TASK_STK[START_STK_SIZE-1],START_TASK_PRIO );
   OSStart();
 
+  //testGPIO();
+  //  BLC_task();
+
   LED0 = 1;
   LED1 = 1;
-  }
+ 
 }
 
 void key_task(void *pdata) {
@@ -111,6 +116,7 @@ void key_task(void *pdata) {
 
 // 称重
 void BLC_task(void *pdata) {
+//void BLC_task(void) {
   float weigh2;
   zero = 0;
   while(1) {
@@ -122,18 +128,18 @@ void BLC_task(void *pdata) {
     printf("%d\n",weight1);
 
     LED0 = !LED0;
-
+  }
 }
 
 // TFLCD 进程
-void lcd_task(void *pdata) {
+void lcd_task(void *pdata){
 //change your shown string here
   while(1) {
-    //printf("lcd task");
     delay_ms(1000);
     POINT_COLOR=RED;
+    //printf("lcd task")；
     LCD_ShowString(30,40,200,24,24,"Mini STM32 ^_^");
-    LCD_ShowString(30,70,200,16,16,"TFTLCD TEST");
+    LCD_ShowNum(30,70,weight1, 4, 16);
     LCD_ShowString(30,90,200,16,16,"CSE@SUSTech");
     //LCD_ShowString(30,110,200,16,16,lcd_id);
     LCD_ShowString(30,130,200,12,12,"2018/1/19");
@@ -147,7 +153,7 @@ void start_task(void *pdata)
   OS_ENTER_CRITICAL();
   OSTaskCreate(key_task,(void *)0,(OS_STK*)&KEY_TASK_STK[KEY_STK_SIZE-1],KEY_TASK_PRIO);
  	OSTaskCreate(BLC_task,(void *)0,(OS_STK*)&BLC_TASK_STK[BLC_STK_SIZE-1],BLC_TASK_PRIO);
-  // OSTaskCreate(lcd_task,(void *)0,(OS_STK*)&lcd_TASK_STK[lcd_STK_SIZE-1],lcd_TASK_PRIO);
+  OSTaskCreate(lcd_task,(void *)0,(OS_STK*)&lcd_TASK_STK[lcd_STK_SIZE-1],lcd_TASK_PRIO);
 	OSTaskSuspend(START_TASK_PRIO);
 	OS_EXIT_CRITICAL();
 }
