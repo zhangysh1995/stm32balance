@@ -70,8 +70,7 @@ int main(void) {
   LED_Init();
   KEY_Init();
   LCD_Init();
-  GPIO_Configuration();
-
+  GPIO_Configuration(); // LCD & GPIO initializing order mastters
 
   sprintf((char*)lcd_id,"LCD ID:%04X",lcddev.id);
 
@@ -80,12 +79,12 @@ int main(void) {
   OSTaskCreate(start_task,(void *)0,(OS_STK *)&START_TASK_STK[START_STK_SIZE-1],START_TASK_PRIO );
   OSStart();
 
-  //testGPIO();
-  //  BLC_task();
+  // testGPIO();
+  // BLC_task();
 
   LED0 = 1;
   LED1 = 1;
- 
+
 }
 
 void key_task(void *pdata) {
